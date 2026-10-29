@@ -1,0 +1,13 @@
+HTTP/1.1 405 
+Set-Cookie: JSESSIONID=2519CF628EF527197B3EF4D5408D4F82; Path=/jsp-app; HttpOnly
+Cache-Control: no-store
+Allow: POST
+Content-Type: text/html;charset=UTF-8
+Content-Length: 564
+Date: Thu, 29 Oct 2026 14:51:48 GMT
+Server: Semana09
+
+
+
+
+<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>No se pudo completar la solicitud</title><link rel="stylesheet" href="/jsp-app/css/styles.css"></head><body><main><section class="card"><span class="badge">HTTP 405</span><h1>No se pudo completar la solicitud</h1><p>Comprueba la dirección y utiliza el formulario para enviar los datos. Si el problema persiste, revisa los logs de Tomcat.</p><a href="/jsp-app/index.jsp">Volver al formulario</a></section></main></body></html>

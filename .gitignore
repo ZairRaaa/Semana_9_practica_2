@@ -1,0 +1,5 @@
+.runtime/
+*.war
+*.log
+jsp-app/WEB-INF/lib/*.jar
+cookies.txt

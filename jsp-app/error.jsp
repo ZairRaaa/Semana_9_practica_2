@@ -1,0 +1,4 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isErrorPage="true" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<% response.setHeader("Cache-Control", "no-store"); %>
+<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>No se pudo completar la solicitud</title><link rel="stylesheet" href="${pageContext.request.contextPath}/css/styles.css"></head><body><main><section class="card"><span class="badge">HTTP <c:out value="${requestScope['jakarta.servlet.error.status_code']}" default="500"/></span><h1>No se pudo completar la solicitud</h1><p>Comprueba la dirección y utiliza el formulario para enviar los datos. Si el problema persiste, revisa los logs de Tomcat.</p><a href="${pageContext.request.contextPath}/index.jsp">Volver al formulario</a></section></main></body></html>
