@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 09 | Registro PHP - UNCP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <span class="badge">Despliegue PHP • Apache</span>
+        <h2>Formulario de Contacto</h2>
+        <p class="subtitle">Ingrese los datos para procesar el registro en el servidor backend.</p>
+
+        <!-- Formulario con método POST hacia procesar.php -->
+        <form action="procesar.php" method="POST">
+            <div class="form-group">
+                <label for="nombre">Nombre Completo:</label>
+                <input 
+                    type="text" 
+                    id="nombre" 
+                    name="nombre" 
+                    placeholder="Ej. Juan Pérez" 
+                    required 
+                    autocomplete="name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="correo">Correo Electrónico:</label>
+                <input 
+                    type="email" 
+                    id="correo" 
+                    name="correo" 
+                    placeholder="ejemplo@uncp.edu.pe" 
+                    required 
+                    autocomplete="email"
+                >
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn">Enviar Registro</button>
+        </form>
+
+        <div class="footer-info">
+            <span>DAW - IS093A (Semana 09)</span>
+            <span>Módulo Desarrollado por Rojas</span>
+        </div>
+    </div>
+</body>
+</html>
