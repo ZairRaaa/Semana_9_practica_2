@@ -125,3 +125,40 @@ El siguiente flujo describe el viaje de una petición web desde la interacción 
 - Formulario: `jsp-app/index.jsp`
 - Procesamiento: `jsp-app/procesar.jsp`
 - Despliegue: Apache Tomcat (puerto 8080 / `webapps/`)
+
+---
+
+## 6. Evidencias y Capturas de Pantalla (Módulo PHP - Rojas)
+
+A continuación se presentan las capturas requeridas para la sustentación y evaluación de la práctica:
+
+### 📸 Captura 1: Formulario de Contacto (`index.html`)
+* **Descripción breve:** Interfaz del formulario web estilizado, listo para capturar nombre y correo del usuario mediante método POST.
+* **Ubicación:** `docs/capturas/01_formulario_contacto.png`
+* *(Insertar imagen: `![Formulario de Contacto](docs/capturas/01_formulario_contacto.png)`)*
+
+### 📸 Captura 2: Tabla de Registros en Sesión (`procesar.php`)
+* **Descripción breve:** Pantalla de confirmación con la tabla acumulativa de contactos almacenados en `$_SESSION` tras procesar la petición en el backend.
+* **Ubicación:** `docs/capturas/02_registros_sesion.png`
+* *(Insertar imagen: `![Registros en Sesión](docs/capturas/02_registros_sesion.png)`)*
+
+### 📸 Captura 3: Prevención de Ataques XSS
+* **Descripción breve:** Registro con carga maliciosa `<script>alert('xss')</script>` neutralizado como texto seguro en la tabla mediante `htmlspecialchars()`.
+* **Ubicación:** `docs/capturas/03_prueba_xss.png`
+* *(Insertar imagen: `![Prueba XSS](docs/capturas/03_prueba_xss.png)`)*
+
+### 📸 Captura 4: Validación de Método HTTP 405 (Seguridad)
+* **Descripción breve:** Respuesta del backend rechazando una petición directa por método GET con el código de estado `405 Method Not Allowed`.
+* **Ubicación:** `docs/capturas/04_error_405.png`
+* *(Insertar imagen: `![Error 405](docs/capturas/04_error_405.png)`)*
+
+### 📸 Captura 5: Logs de Acceso del Servidor Apache
+* **Descripción breve:** Archivo `access.log` de Apache evidenciando las peticiones GET (200), POST (200) y el rechazo por método no permitido (405).
+* **Ubicación:** `docs/capturas/05_apache_logs.png`
+* *(Insertar imagen: `![Logs de Apache](docs/capturas/05_apache_logs.png)`)*
+
+### 📸 Captura 6: Servidor Apache Activo en XAMPP
+* **Descripción breve:** Panel de control de XAMPP mostrando el servicio Apache en ejecución en el puerto 8080.
+* **Ubicación:** `docs/capturas/06_xampp_apache.png`
+* *(Insertar imagen: `![XAMPP Apache](docs/capturas/06_xampp_apache.png)`)*
+
