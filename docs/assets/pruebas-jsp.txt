@@ -1,0 +1,16 @@
+Pruebas HTTP reales | 2026-10-29T09:51:48.8263219-05:00 | http://127.0.0.1:8080/jsp-app
+OK | Formulario GET = 200
+OK | GET en procesar.jsp = 405 y Allow POST
+OK | PUT en procesar.jsp = 405 y Allow POST
+OK | DELETE en procesar.jsp = 405 y Allow POST
+OK | HEAD en procesar.jsp = 405 y Allow POST
+OK | Datos invalidos = 400
+OK | Longitud invalida = 400
+OK | Contacto valido = 303
+OK | Carga XSS admitida como texto = 303
+OK | XSS escapado al mostrar nombre y mensaje
+OK | UTF-8 conserva acentos
+OK | Dos registros acumulados; invalidos no almacenados
+OK | Actualizar tabla no duplica registros
+OK | Sesiones aisladas
+OK | Ruta inexistente = 404 personalizado sin traza

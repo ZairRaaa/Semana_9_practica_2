@@ -1,3 +1,11 @@
+# Archivos temporales del sistema y Office
 ~$*.docx
 .DS_Store
 Thumbs.db
+
+# Runtime y compilados de Tomcat y Java
+.runtime/
+*.war
+*.log
+jsp-app/WEB-INF/lib/*.jar
+cookies.txt

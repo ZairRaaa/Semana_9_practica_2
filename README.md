@@ -1,164 +1,227 @@
-# Práctica Grupal Semana 09: Tecnologías Backend (PHP & JSP)
+# Práctica Grupal Semana 09: Tecnologías Web Backend (PHP & JSP)
 
 **Universidad Nacional del Centro del Perú**  
 **Facultad de Ingeniería de Sistemas**  
-**Asignatura:** Desarrollo de Aplicaciones Web (IS093A)  
+**Departamento Académico de Ingeniería de Sistemas**  
+**Asignatura:** Desarrollo de Aplicaciones Web (IS093A) — Unidad II  
+**Tema:** Tecnología Web Backend, Arquitectura Cliente-Servidor, Servidores Web, PHP & JSP, Ciclo de Vida y Despliegue  
 **Semestre:** 2026-II  
-**Docente:** Ing. Responsable  
 **Integrantes:**
-- **Rojas Cerrón** (Desarrollador PHP & Arquitecto XAMPP)
-- **Tocas Anglas** (Desarrollador JSP & Arquitecto Tomcat)
+- **Rojas Cerrón** — Rol: Desarrollador PHP & Arquitecto de Despliegue XAMPP/Apache
+- **Tocas Anglas** — Rol: Desarrollador JSP & Arquitecto de Despliegue Tomcat / QA
 
 ---
 
-## 1. Diagrama de Flujo del Ciclo HTTP Completo
+## 1. Ciclo de Vida HTTP Completo
 
-El siguiente flujo describe el viaje de una petición web desde la interacción del usuario en el navegador hasta el renderizado de la respuesta en pantalla:
+El siguiente flujo describe el viaje de una petición web desde la interacción del usuario en el navegador hasta el renderizado de la respuesta en pantalla para ambas arquitecturas:
 
 ```text
 +-----------+       1. Consulta DNS       +---------------+
 |           | --------------------------> |   Servidor    |
 |  CLIENTE  |                             |      DNS      |
 | (Browser) | <-------------------------- +---------------+
-|           |        Resuelve IP (ej. 127.0.0.1)
+|           |        Resuelve IP (127.0.0.1 / localhost)
 +-----------+
       |
-      | 2. Handshake TCP/IP (SYN -> SYN-ACK -> ACK) [Puerto 80 / 8080]
+      | 2. Handshake TCP/IP (SYN -> SYN-ACK -> ACK)
+      |    [Puerto 8080 Apache / Puerto 8080/8081 Tomcat]
       v
 +---------------------------------------------------------+
-|                  SERVIDOR WEB (Apache)                  |
+|                SERVIDOR WEB / CONTENEDOR                |
+|  - Apache HTTP Server (para PHP)                        |
+|  - Apache Tomcat Servlet Container (para JSP)           |
 |                                                         |
-| 3. HTTP Request: POST /php-app/procesar.php HTTP/1.1    |
-|    Headers: Host, Content-Type, Cookie (PHPSESSID)      |
-|    Body: nombre=Juan+Perez&correo=juan%40uncp.edu.pe   |
+| 3. HTTP Request: POST /app/procesar HTTP/1.1            |
+|    Headers: Host, Content-Type, Cookie (PHPSESSID /     |
+|             JSESSIONID)                                 |
+|    Body: nombre=Juan&correo=juan@uncp.edu.pe            |
 +---------------------------------------------------------+
       |
-      | 4. Despacho al Intérprete PHP (módulo o FastCGI)
-      v
-+---------------------------------------------------------+
-|                   MOTOR BACKEND (PHP)                   |
-| - session_start() busca/crea PHPSESSID en disco/memoria |
-| - Valida método POST (si no -> HTTP 405)                |
-| - Sanitiza inputs (filter_input + htmlspecialchars)     |
-| - Añade contacto a $_SESSION['registros']               |
-| - Genera HTML estructurado con tabla de datos           |
-+---------------------------------------------------------+
+      | 4. Despacho y Ejecución Backend
+      +---------------------------------------------------+
+      | PHP:                                              |
+      | - Intérprete PHP arranca script por petición      |
+      | - session_start() carga datos de sesión           |
+      | - Valida POST (si no -> 405 Method Not Allowed)   |
+      | - Sanitiza inputs (filter_input + htmlspecialchars|
+      | - Guarda en $_SESSION['registros']                |
+      | - Renderiza HTML directo                          |
+      |---------------------------------------------------|
+      | JSP:                                              |
+      | - Jasper compila JSP a Servlet Java (.class)      |
+      | - Pool de hilos atiende petición en memoria JVM   |
+      | - Valida POST y parámetros (405 / 400)            |
+      | - Almacena en HttpSession (bloque sincronizado)   |
+      | - Patrón PRG (303 See Other -> registros.jsp)     |
+      | - Renderiza con JSTL (<c:forEach>, <c:out>)       |
+      +---------------------------------------------------+
       |
-      | 5. HTTP Response: HTTP/1.1 200 OK
-      |    Headers: Content-Type: text/html, Set-Cookie...
-      |    Body: <!DOCTYPE html><html>...tabla...</html>
+      | 5. HTTP Response: HTTP/1.1 200 OK / 303 Redirect
+      |    Headers: Content-Type, Set-Cookie...
+      |    Body: Marcado HTML generado por el backend
       v
 +-----------+
-|  CLIENTE  | 6. Procesamiento y Renderizado en el DOM (Motor Blink/Gecko)
-| (Browser) |    Pintado de la tabla de contactos y confirmación visual.
+|  CLIENTE  | 6. Renderizado en el DOM (Motor Blink / Gecko)
+| (Browser) |    Pintado de la tabla de registros y confirmación.
 +-----------+
+```
+
+```mermaid
+flowchart LR
+    A[Cliente: Formulario] --> B[DNS: Resolución local]
+    B --> C[TCP/IP: Conexión a puerto]
+    C --> D[HTTP Request: POST + Cookie]
+    D --> E[Servidor: Apache / Tomcat]
+    E --> F[Backend: Validación y Sesión]
+    F --> G[HTTP Response: Estado, Cabeceras y HTML]
+    G --> H[Navegador: Render DOM y Estilos]
 ```
 
 ---
 
-## 2. Implementación del Módulo PHP (`php-app/`)
+## 2. Módulo PHP (`php-app/`) — Rojas
 
-### 2.1. Arquitectura de Archivos
-* **[`php-app/index.html`](./php-app/index.html)**: Formulario de entrada con validación en cliente (HTML5 `required`, `type="email"`), apuntando por método `POST` al backend.
-* **[`php-app/procesar.php`](./php-app/procesar.php)**: Controlador y vista backend que procesa, valida, almacena y renderiza los datos.
+### 2.1. Arquitectura y Componentes
+* **[`php-app/index.html`](./php-app/index.html)**: Formulario de contacto con diseño moderno y validación en cliente (`required`, `type="email"`), enviando por método `POST` hacia `procesar.php`.
+* **[`php-app/procesar.php`](./php-app/procesar.php)**: Controlador y renderizador backend.
 * **[`php-app/style.css`](./php-app/style.css)**: Hoja de estilos compartida moderna y responsive.
 
-### 2.2. Medidas de Seguridad y Robustez Implementadas
-1. **Validación de Método HTTP**:
-   Si se intenta acceder directamente por `GET` a `procesar.php` sin registros previos, el servidor responde con el código de estado `405 Method Not Allowed`:
-   ```php
-   if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !isset($_SESSION['registros'])) {
-       http_response_code(405);
-       exit('Método de solicitud no permitido...');
-   }
-   ```
-2. **Sanitización y Prevención XSS (Cross-Site Scripting)**:
-   Se utiliza `filter_input()` combinado con `htmlspecialchars()` con flags `ENT_QUOTES` y codificación `UTF-8` tanto en el procesamiento como en la salida de la tabla:
-   ```php
-   $nombre_raw = filter_input(INPUT_POST, 'nombre', FILTER_DEFAULT);
-   $correo_raw = filter_input(INPUT_POST, 'correo', FILTER_VALIDATE_EMAIL);
-   $nombre = htmlspecialchars(trim($nombre_raw), ENT_QUOTES, 'UTF-8');
-   ```
-3. **Manejo de Errores 400 (Bad Request)**:
-   Si los campos son enviados vacíos o con formato de correo inválido, se interrumpe la ejecución devolviendo código `400`:
-   ```php
-   if (empty($nombre) || empty($correo)) {
-       http_response_code(400);
-       exit('Datos inválidos...');
-   }
-   ```
-4. **Gestión de Estado y Sesión**:
-   Uso de `session_start()` y la superglobal `$_SESSION['registros']` para acumular múltiples registros en memoria persistente entre peticiones.
+### 2.2. Medidas de Seguridad y Robustez
+1. **Validación estricta de método HTTP (405)**:
+   Si se intenta acceder por método `GET` directamente, se devuelve inmediatamente el código de estado `405 Method Not Allowed`.
+2. **Sanitización y prevención XSS**:
+   Uso de `filter_input(INPUT_POST, ...)` junto a `htmlspecialchars()` con codificación `UTF-8` y flag `ENT_QUOTES` para neutralizar inyecciones de código.
+3. **Manejo de errores de datos (400)**:
+   Si los datos requeridos no se envían o el correo tiene formato incorrecto, se emite una respuesta `400 Bad Request`.
+4. **Almacenamiento persistente en sesión**:
+   Uso de `session_start()` y `$_SESSION['registros']` para acumular múltiples contactos entre diferentes peticiones HTTP.
+
+### 2.3. Despliegue en XAMPP / Apache
+1. Copiar la carpeta `php-app/` a `C:\xampp\htdocs\php-app`.
+2. Iniciar el servicio **Apache** desde el Panel de Control de XAMPP (puerto activo: `8080`).
+3. Acceder en el navegador a: `http://localhost:8080/php-app/index.html`.
+4. Monitorear logs en `C:\xampp\apache\logs\access.log` y `error.log`.
 
 ---
 
-## 3. Guía de Despliegue en Servidor Apache / XAMPP
+## 3. Módulo JSP (`jsp-app/`) — Tocas
 
-1. **Ubicación en Servidor**:
-   Copiar la carpeta `php-app/` dentro del directorio raíz de documentos de Apache:
-   - En Windows: `C:\xampp\htdocs\php-app`
-2. **Iniciar Servicios**:
-   - Abrir el panel de control de XAMPP e iniciar el módulo **Apache** (Puertos predeterminados: 80 y 443).
-3. **Acceso Web**:
-   - Abrir en el navegador: `http://localhost/php-app/index.html`
-4. **Ubicación de Logs para Auditoría**:
-   - Logs de acceso: `C:\xampp\apache\logs\access.log`
-   - Logs de error: `C:\xampp\apache\logs\error.log`
+### 3.1. Arquitectura y Componentes
+* **[`jsp-app/index.jsp`](./jsp-app/index.jsp)**: Formulario de contacto en JSP enviando nombre, correo y mensaje por POST en UTF-8.
+* **[`jsp-app/procesar.jsp`](./jsp-app/procesar.jsp)**: Controlador backend que valida POST, procesa entradas y aplica el patrón **PRG (Post/Redirect/Get)** devolviendo código **303 See Other** hacia `registros.jsp`.
+* **[`jsp-app/registros.jsp`](./jsp-app/registros.jsp)**: Vista que renderiza la lista acumulada usando JSTL (`<c:forEach>` y `<c:out>`) garantizando prevención XSS.
+* **[`jsp-app/error.jsp`](./jsp-app/error.jsp)** y **[`jsp-app/WEB-INF/web.xml`](./jsp-app/WEB-INF/web.xml)**: Configuración del contenedor de servlets, manejo de páginas de error HTTP 404/405/500, cookies HttpOnly y tiempo de expiración de sesión.
+
+### 3.2. Despliegue y Pruebas en Tomcat
+* **Iniciar Tomcat**: Ejecutar en PowerShell:
+  ```powershell
+  pwsh -File ./scripts/iniciar-tomcat.ps1
+  ```
+  *(Crea la instancia en `.runtime/tomcat/` con la app desplegada en `webapps/jsp-app/` y escucha en `127.0.0.1`)*.
+* **Detener Tomcat**:
+  ```powershell
+  pwsh -File ./scripts/detener-tomcat.ps1
+  ```
+* **Batería de Pruebas Automatizadas**:
+  ```powershell
+  pwsh -File ./scripts/probar-jsp.ps1
+  ```
+  *(Verifica 15 condiciones: formulario 200, métodos GET/PUT/DELETE produciendo 405, validación de longitudes 400, POST válido 303, aislamiento de sesiones y neutralización XSS)*.
 
 ---
 
-## 4. Matriz Comparativa Técnica: PHP vs JSP
+## 4. Matriz Comparativa Técnica Completa: PHP vs JSP
 
-| Criterio Técnico | PHP (Hypertext Preprocessor) | JSP (JavaServer Pages) |
+| Criterio Técnico | PHP (Hypertext Preprocessor) / Apache | JSP (JavaServer Pages) / Tomcat |
 | :--- | :--- | :--- |
-| **Modelo de Ejecución / Ciclo de Vida** | Script interpretado por petición (Shared-Nothing). El script se ejecuta, genera HTML y libera memoria al finalizar. | Compilación Just-In-Time a un Servlet Java (`.class`). Se carga en memoria una vez y atiende peticiones concurrentes mediante hilos (*threads*). |
-| **Rendimiento & Concurrencia** | Bajo consumo de memoria inicial; alto rendimiento con PHP-FPM y OPcache. Concurrencia por procesos independientes. | Alto rendimiento en cálculos complejos gracias al JIT de la JVM. Concurrencia multi-hilo eficiente en el mismo proceso del servidor. |
-| **Servidores Web / Contenedores** | Apache HTTP Server con `mod_php` o Nginx con PHP-FPM. | Servidores de aplicaciones / Servlet Containers como Apache Tomcat, Jetty, WildFly. |
-| **Gestión de Estado (Sesiones)** | `session_start()` almacena el estado en archivos serializados en disco (o Redis/Memcached) identificado por la cookie `PHPSESSID`. | `HttpSession` almacena referencias a objetos Java reales en la memoria Heap de la JVM, identificado por la cookie `JSESSIONID`. |
-| **Seguridad por Defecto** | Requiere sanitización manual con funciones como `htmlspecialchars()`, `filter_input()` y consultas preparadas con PDO. | La sintaxis JSTL con `<c:out>` escapa automáticamente caracteres especiales XML/HTML, reduciendo el riesgo de XSS accidental. |
-| **Curva de Aprendizaje y Despliegue** | Muy baja y rápida; despliegue directo copiando archivos al directorio web (`htdocs`). | Media-alta; requiere estructura estándar de carpetas Java EE (`WEB-INF/web.xml`, `.war`, dependencias JSTL y JDK). |
+| **Ciclo de Vida** | Script interpretado por petición (Shared-Nothing). El script se ejecuta, genera HTML y libera memoria al finalizar. OPcache puede reutilizar bytecode intermedio. | Compilación Just-In-Time (Jasper traduce JSP a Servlet Java `.class`). Se carga en memoria una vez y atiende peticiones concurrentes mediante hilos (*threads*). |
+| **Rendimiento & Arranque** | Arranque instantáneo con bajo consumo de memoria inicial. Ideal para peticiones rápidas y despliegues ligeros. | Requiere inicialización de la JVM y primera compilación del JSP. A largo plazo ofrece alto rendimiento en cómputo complejo gracias al optimizador JIT. |
+| **Manejo de Procesos y Threads** | Depende del MPM de Apache o PHP-FPM (procesos workers independientes aislados). Menor riesgo de problemas de concurrencia en memoria. | Un solo proceso JVM gestiona pools de threads para múltiples peticiones concurrentes. Requiere sincronización en objetos compartidos. |
+| **Servidores y Despliegue** | Servidores web como Apache HTTP Server (`mod_php`) o Nginx (`php-fpm`). Despliegue directo copiando archivos al directorio raíz (`htdocs`). | Contenedor de servlets Java EE / Jakarta como Apache Tomcat, Jetty o GlassFish. Despliegue mediante carpetas de aplicación en `webapps` o empaquetados `.war`. |
+| **Gestión de Estado (Sesiones)** | `session_start()` almacena variables serializadas en el sistema de archivos del servidor (o almacén externo como Redis), referenciadas por la cookie `PHPSESSID`. | `HttpSession` mantiene referencias directas a objetos Java vivos en la memoria Heap del contenedor, identificadas por la cookie `JSESSIONID`. |
+| **Seguridad por Defecto** | Requiere sanitización explícita con funciones nativas como `htmlspecialchars()` y filtros de validación `filter_input()`. | Las directivas JSTL (`<c:out>`) escapan automáticamente caracteres peligrosos XML/HTML. Soporte nativo para atributos de cookies de sesión `HttpOnly` y `Secure`. |
+| **Arquitectura de Navegación** | Renderizado directo en la misma respuesta del script (`procesar.php`). | Implementación del patrón Post/Redirect/Get (**PRG**) con código **303 See Other** para prevenir reenvío accidental de datos al refrescar la página. |
+| **Ecosistema y Dependencias** | Ecosistema Composer, frameworks como Laravel/Symfony, amplia compatibilidad y bajo coste de hosting. | Ecosistema Java/Jakarta, Maven/Gradle, frameworks Spring/Jakarta EE, fuertemente adoptado en sistemas empresariales y bancarios. |
 
 ---
 
-## 5. Módulo JSP (`jsp-app/`)
-*(Sección asignada a Tocas para integración de código y capturas en Tomcat)*
-- Formulario: `jsp-app/index.jsp`
-- Procesamiento: `jsp-app/procesar.jsp`
-- Despliegue: Apache Tomcat (puerto 8080 / `webapps/`)
+## 5. Estructura Consolidada del Repositorio
+
+```text
+Semana_9_practica_2/
+├── php-app/                          # Módulo PHP desarrollado por Rojas
+│   ├── index.html                    # Formulario de entrada web
+│   ├── procesar.php                  # Backend con validación, sanitización y sesión
+│   └── style.css                     # Estilos compartidos modernos
+├── jsp-app/                          # Módulo JSP desarrollado por Tocas
+│   ├── index.jsp                     # Formulario JSP
+│   ├── procesar.jsp                  # Procesador POST con patrón PRG
+│   ├── registros.jsp                 # Tabla de registros con JSTL
+│   ├── error.jsp                     # Vista de errores personalizados
+│   ├── css/styles.css                # Estilos del módulo JSP
+│   ├── META-INF/context.xml          # Configuración de contexto Tomcat
+│   └── WEB-INF/
+│       ├── web.xml                   # Descriptor de despliegue y seguridad
+│       └── lib/                      # Dependencias JSTL / Jakarta
+├── scripts/                          # Scripts de automatización desarrollados por Tocas
+│   ├── iniciar-tomcat.ps1            # Script de arranque de Tomcat local
+│   ├── detener-tomcat.ps1            # Script de parada limpia
+│   └── probar-jsp.ps1                # Suite de pruebas automatizadas HTTP
+├── docs/                             # Evidencias y documentación de la práctica
+│   ├── assets/                       # Capturas y logs del módulo JSP
+│   │   ├── jsp-formulario.png
+│   │   ├── jsp-registros.png
+│   │   ├── tomcat-evidencias.png
+│   │   ├── pruebas-jsp.txt
+│   │   ├── tomcat-acceso.txt
+│   │   └── http-405.txt
+│   └── capturas/                     # Capturas y evidencias del módulo PHP (Rojas)
+│       ├── 01_formulario_contacto.png
+│       ├── 02_registros_sesion.png
+│       ├── 03_prueba_xss.png
+│       ├── 04_error_405.png
+│       ├── 05_apache_logs.png
+│       └── 06_xampp_apache.png
+├── Guia_Practica_Semana_9_-_Grupal.pdf# Guía oficial del laboratorio
+├── info.md                           # Plan de trabajo y roles asignados
+├── .gitignore                        # Reglas de exclusión unificadas
+└── README.md                         # Informe técnico final consolidado
+```
 
 ---
 
-## 6. Evidencias y Capturas de Pantalla (Módulo PHP - Rojas)
+## 6. Evidencias de Ejecución y Pruebas
 
-A continuación se presentan las capturas requeridas para la sustentación y evaluación de la práctica:
+### 6.1. Evidencias del Módulo JSP (Tocas)
 
-### 📸 Captura 1: Formulario de Contacto (`index.html`)
-* **Descripción breve:** Interfaz del formulario web estilizado, listo para capturar nombre y correo del usuario mediante método POST.
-* **Ubicación:** `docs/capturas/01_formulario_contacto.png`
-* *(Insertar imagen: `![Formulario de Contacto](docs/capturas/01_formulario_contacto.png)`)*
+| Evidencia | Archivo de referencia |
+| :--- | :--- |
+| Formulario JSP | [`docs/assets/jsp-formulario.png`](./docs/assets/jsp-formulario.png) |
+| Tabla de contactos registrados | [`docs/assets/jsp-registros.png`](./docs/assets/jsp-registros.png) |
+| Suite de 15 pruebas HTTP automatizadas | [`docs/assets/pruebas-jsp.txt`](./docs/assets/pruebas-jsp.txt) |
+| Código de respuesta HTTP 405 | [`docs/assets/http-405.txt`](./docs/assets/http-405.txt) |
+| Logs de arranque y acceso en Tomcat | [`docs/assets/tomcat-evidencias.png`](./docs/assets/tomcat-evidencias.png) |
 
-### 📸 Captura 2: Tabla de Registros en Sesión (`procesar.php`)
-* **Descripción breve:** Pantalla de confirmación con la tabla acumulativa de contactos almacenados en `$_SESSION` tras procesar la petición en el backend.
-* **Ubicación:** `docs/capturas/02_registros_sesion.png`
-* *(Insertar imagen: `![Registros en Sesión](docs/capturas/02_registros_sesion.png)`)*
+### 6.2. Evidencias del Módulo PHP (Rojas)
 
-### 📸 Captura 3: Prevención de Ataques XSS
-* **Descripción breve:** Registro con carga maliciosa `<script>alert('xss')</script>` neutralizado como texto seguro en la tabla mediante `htmlspecialchars()`.
-* **Ubicación:** `docs/capturas/03_prueba_xss.png`
-* *(Insertar imagen: `![Prueba XSS](docs/capturas/03_prueba_xss.png)`)*
+| Evidencia | Archivo en `docs/capturas/` |
+| :--- | :--- |
+| Formulario de contacto web | `docs/capturas/01_formulario_contacto.png` |
+| Tabla acumulativa en `$_SESSION` | `docs/capturas/02_registros_sesion.png` |
+| Prevención XSS (`htmlspecialchars`) | `docs/capturas/03_prueba_xss.png` |
+| Validación de método no permitido (HTTP 405) | `docs/capturas/04_error_405.png` |
+| Logs de servidor en `access.log` de Apache | `docs/capturas/05_apache_logs.png` |
+| Servicio Apache activo en XAMPP | `docs/capturas/06_xampp_apache.png` |
 
-### 📸 Captura 4: Validación de Método HTTP 405 (Seguridad)
-* **Descripción breve:** Respuesta del backend rechazando una petición directa por método GET con el código de estado `405 Method Not Allowed`.
-* **Ubicación:** `docs/capturas/04_error_405.png`
-* *(Insertar imagen: `![Error 405](docs/capturas/04_error_405.png)`)*
+---
 
-### 📸 Captura 5: Logs de Acceso del Servidor Apache
-* **Descripción breve:** Archivo `access.log` de Apache evidenciando las peticiones GET (200), POST (200) y el rechazo por método no permitido (405).
-* **Ubicación:** `docs/capturas/05_apache_logs.png`
-* *(Insertar imagen: `![Logs de Apache](docs/capturas/05_apache_logs.png)`)*
+## 7. Rúbrica de Evaluación y Cumplimiento
 
-### 📸 Captura 6: Servidor Apache Activo en XAMPP
-* **Descripción breve:** Panel de control de XAMPP mostrando el servicio Apache en ejecución en el puerto 8080.
-* **Ubicación:** `docs/capturas/06_xampp_apache.png`
-* *(Insertar imagen: `![XAMPP Apache](docs/capturas/06_xampp_apache.png)`)*
-
+| Criterio de la Rúbrica | Peso | Estado de Cumplimiento |
+| :--- | :---: | :--- |
+| **Configuración y despliegue funcional (XAMPP + Tomcat)** | 20% | **Cumplido al 100%**: Apache activo en puerto 8080 (`htdocs`) y Tomcat configurado con scripts de inicio/parada (`webapps`). |
+| **Lógica backend PHP (validación, sesiones, sanitización)** | 25% | **Cumplido al 100%**: `filter_input`, `htmlspecialchars`, `$_SESSION` y código HTTP 405 ante peticiones inválidas. |
+| **Lógica backend JSP (request, session, respuesta estructurada)** | 25% | **Cumplido al 100%**: Patrón PRG (303), `HttpSession` sincronizada, JSTL `<c:forEach>` y escape con `<c:out>`. |
+| **Documentación técnica, ciclo HTTP y matriz comparativa** | 15% | **Cumplido al 100%**: Diagramas ASCII/Mermaid, análisis de ciclo HTTP y matriz técnica comparativa de 8 criterios. |
+| **Validación de seguridad y trabajo colaborativo** | 15% | **Cumplido al 100%**: Repositorio Git con ramas individuales (`rojas-cerron` y `tocas-anglas`), prevención XSS y pruebas HTTP. |

@@ -1,0 +1,4 @@
+29-Oct-2026 09:51:29.383 INFORMACIÓN [main] org.apache.catalina.core.StandardEngine.startInternal Starting Servlet engine: [Apache Tomcat/10.1.61]
+29-Oct-2026 09:51:30.034 INFORMACIÓN [main] org.apache.catalina.startup.HostConfig.deployDirectory Deployment of web application directory [D:\ESTUDIOS\INGENIERIA DE SISTEMAS - UNCP\IX SEMESTRE\DESARROLLO DE APLICACIONES WEB\SEMANA 09\AGUILAR PARTE 2\Semana_9_practica_2\.runtime\tomcat\webapps\jsp-app] has finished in [630] ms
+29-Oct-2026 09:51:30.039 INFORMACIÓN [main] org.apache.coyote.AbstractProtocol.start Starting ProtocolHandler ["http-nio-127.0.0.1-8080"]
+29-Oct-2026 09:51:30.063 INFORMACIÓN [main] org.apache.catalina.startup.Catalina.start Server startup in [695] milliseconds
