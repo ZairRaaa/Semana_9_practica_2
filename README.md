@@ -205,14 +205,33 @@ Semana_9_practica_2/
 
 ### 6.2. Evidencias del Módulo PHP (Rojas)
 
-| Evidencia | Archivo en `docs/capturas/` |
-| :--- | :--- |
-| Formulario de contacto web | `docs/capturas/01_formulario_contacto.png` |
-| Tabla acumulativa en `$_SESSION` | `docs/capturas/02_registros_sesion.png` |
-| Prevención XSS (`htmlspecialchars`) | `docs/capturas/03_prueba_xss.png` |
-| Validación de método no permitido (HTTP 405) | `docs/capturas/04_error_405.png` |
-| Logs de servidor en `access.log` de Apache | `docs/capturas/05_apache_logs.png` |
-| Servicio Apache activo en XAMPP | `docs/capturas/06_xampp_apache.png` |
+#### 📸 Formulario de Contacto Web (`index.html`)
+* **Descripción:** Interfaz del formulario web de contacto enviando datos por método POST al backend en Apache (puerto 8080).
+![Formulario de Contacto](docs/capturas/01_formulario_contacto.png)
+
+#### 📸 Tabla de Registros Almacenados en Sesión (`procesar.php`)
+* **Descripción:** Persistencia de datos en `$_SESSION` y renderizado de la tabla estructurada con registros acumulados.
+![Tabla de Registros](docs/capturas/02_registros_sesion.png)
+
+#### 📸 Prueba de Seguridad: Prevención XSS
+* **Descripción:** Sanitización de entradas contra inyecciones XSS mediante `htmlspecialchars()`, neutralizando etiquetas `<script>` como texto plano inofensivo.
+![Prueba de Seguridad XSS](docs/capturas/03_prueba_xss.png)
+
+#### 📸 Prueba de Seguridad: Método No Permitido (HTTP 405)
+* **Descripción:** Validación estricta de peticiones HTTP POST; rechazo a accesos directos por GET con código `405 Method Not Allowed`.
+![Error 405](docs/capturas/04_error_405.png)
+
+#### 📸 Logs del Servidor Apache (`access.log`)
+* **Descripción:** Evidencia de auditoría y monitoreo en `access.log` de Apache registrando códigos 200 y 405.
+![Logs de Apache](docs/capturas/05_apache_logs.png)
+
+#### 📸 Servidor Apache Activo en XAMPP
+* **Descripción:** Configuración y ejecución del servidor web Apache en el puerto 8080 desde el panel de control de XAMPP.
+![Servidor Apache XAMPP](docs/capturas/06_xampp_apache.png)
+
+#### 📸 Evidencia de Trabajo Colaborativo en Repositorio
+* **Descripción:** Gestión de ramas (`rojas-cerron` y `tocas-anglas`), commits organizados y estructura del proyecto.
+![Repositorio GitHub](docs/capturas/07_repositorio_github.png)
 
 ---
 
